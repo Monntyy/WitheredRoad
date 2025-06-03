@@ -34,6 +34,18 @@ AWRPlayerCharacter::AWRPlayerCharacter()
 	ChMoveComp->GravityScale = 1.35f;
 	ChMoveComp->BrakingDecelerationFalling = 200.f;
 
+	/*/GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+	GetMesh()->SetComponentTickEnabled(true);
+	GetMesh()->PrimaryComponentTick.bCanEverTick = true;
+	GetMesh()->SetVisibility(true);
+	GetMesh()->bRenderInMainPass = true;
+	GetMesh()->SetBoundsScale(4.0f); // Fix for culling
+	GetMesh()->bRenderCustomDepth = false;
+	GetMesh()->bCastDynamicShadow = true;
+	GetMesh()->bCastCapsuleIndirectShadow = false;
+	GetMesh()->bCastVolumetricTranslucentShadow = false;
+	GetMesh()->bPauseAnims = false;*/
+
 }
 
 
@@ -89,9 +101,22 @@ void AWRPlayerCharacter::Look(const FInputActionValue& InputValue)
 
 	const FVector2D Value = InputValue.Get<FVector2D>();
 
-	AddControllerYawInput(Value.X);
-	AddControllerPitchInput(Value.Y);
+	if (Controller)
+	{
+		// Normal yaw (horizontal)
+		AddControllerYawInput(Value.X);
 
+		// Invert pitch input
+		float InvertedPitchInput = -Value.Y;
+
+		// Get and clamp control rotation
+		FRotator ControlRot = Controller->GetControlRotation();
+		float TargetPitch = ControlRot.Pitch + InvertedPitchInput;
+		TargetPitch = FMath::ClampAngle(TargetPitch, -60.0f, 60.0f);
+
+		ControlRot.Pitch = TargetPitch;
+		Controller->SetControlRotation(ControlRot);
+	}
 
 }
 
